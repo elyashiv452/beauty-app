@@ -1,268 +1,236 @@
+import { supabase } from './supabase'
 import { Lead, Client, Appointment, Payment } from '@/types'
 
 function generateId() {
   return Math.random().toString(36).substring(2, 10)
 }
 
-const now = new Date()
-const today = now.toISOString().split('T')[0]
-const tomorrow = new Date(now.getTime() + 86400000).toISOString().split('T')[0]
-const nextWeek = new Date(now.getTime() + 7 * 86400000).toISOString().split('T')[0]
-
-// ── Seed Data ──────────────────────────────────────────────────
-
-const seedLeads: Lead[] = [
-  {
-    id: 'l1', name: 'נועה כהן', phone: '050-1234567', status: 'new',
-    clientType: 'bride', eventType: 'wedding', eventDate: '2025-08-15',
-    location: 'תל אביב', companions: 0, heardFrom: 'המלצת חברה',
-    notes: 'שאלה על מחירים', source: 'whatsapp',
-    createdAt: new Date(now.getTime() - 5 * 60000).toISOString(),
-    updatedAt: new Date(now.getTime() - 5 * 60000).toISOString(),
-  },
-  {
-    id: 'l2', name: 'שירה לוי', phone: '052-9876543', status: 'new',
-    clientType: 'companion', eventType: 'bat_mitzva', eventDate: '2025-09-22',
-    location: 'ירושלים', companions: 3, heardFrom: 'אינסטגרם',
-    notes: 'רוצה עיפרון וצלליות', source: 'whatsapp',
-    createdAt: new Date(now.getTime() - 2 * 3600000).toISOString(),
-    updatedAt: new Date(now.getTime() - 2 * 3600000).toISOString(),
-  },
-  {
-    id: 'l3', name: 'רחל משה', phone: '054-1111222', status: 'contacted',
-    clientType: 'bride', eventType: 'wedding', eventDate: '2025-07-10',
-    location: 'נתניה', companions: 0, heardFrom: 'גוגל',
-    source: 'whatsapp', noReplyWarning: true,
-    createdAt: new Date(now.getTime() - 50 * 3600000).toISOString(),
-    updatedAt: new Date(now.getTime() - 50 * 3600000).toISOString(),
-  },
-  {
-    id: 'l4', name: 'טל ברקוביץ', phone: '053-5554433', status: 'contacted',
-    clientType: 'companion', eventType: 'wedding', eventDate: '2025-08-05',
-    location: 'רמת גן', companions: 5, heardFrom: 'פייסבוק',
-    source: 'whatsapp',
-    createdAt: new Date(now.getTime() - 20 * 3600000).toISOString(),
-    updatedAt: new Date(now.getTime() - 20 * 3600000).toISOString(),
-  },
-  {
-    id: 'l5', name: 'יעל כץ', phone: '050-9988776', status: 'quote',
-    clientType: 'bride', eventType: 'wedding', eventDate: '2025-06-30',
-    location: 'הרצליה', companions: 4, heardFrom: 'המלצה',
-    source: 'whatsapp',
-    createdAt: new Date(now.getTime() - 3 * 86400000).toISOString(),
-    updatedAt: new Date(now.getTime() - 3 * 86400000).toISOString(),
-  },
-  {
-    id: 'l6', name: 'הילה רוזן', phone: '052-3332211', status: 'closed',
-    clientType: 'bride', eventType: 'wedding', eventDate: '2025-06-12',
-    location: 'תל אביב', companions: 2, heardFrom: 'המלצה',
-    source: 'whatsapp',
-    createdAt: new Date(now.getTime() - 10 * 86400000).toISOString(),
-    updatedAt: new Date(now.getTime() - 2 * 86400000).toISOString(),
-  },
-]
-
-const seedClients: Client[] = [
-  {
-    id: 'c1', name: 'הילה רוזן', phone: '052-3332211',
-    clientType: 'bride', eventType: 'wedding', eventDate: '2025-06-12',
-    location: 'תל אביב', companions: 2, heardFrom: 'המלצה',
-    totalAmount: 1400, paidAmount: 420, paymentStatus: 'deposit',
-    createdAt: new Date(now.getTime() - 2 * 86400000).toISOString(),
-    leadId: 'l6',
-  },
-  {
-    id: 'c2', name: 'כרמית עוז', phone: '054-7776655',
-    clientType: 'bride', eventType: 'wedding', eventDate: '2025-06-25',
-    location: 'רמת גן', companions: 3,
-    totalAmount: 2200, paidAmount: 2200, paymentStatus: 'full',
-    createdAt: new Date(now.getTime() - 5 * 86400000).toISOString(),
-  },
-  {
-    id: 'c3', name: 'מור בן-דוד', phone: '050-4445566',
-    clientType: 'companion', eventType: 'event', eventDate: '2025-07-08',
-    location: 'חיפה', companions: 2,
-    totalAmount: 600, paidAmount: 180, paymentStatus: 'deposit',
-    createdAt: new Date(now.getTime() - 3 * 86400000).toISOString(),
-  },
-]
-
-const seedAppointments: Appointment[] = [
-  {
-    id: 'a1', clientId: 'c1', clientName: 'הילה רוזן', phone: '052-3332211',
-    date: tomorrow, time: '07:00', eventType: 'wedding', clientType: 'bride',
-    location: 'רח׳ דיזנגוף 5, תל אביב', companions: 2,
-    notes: 'הגעה לבית הכלה', totalAmount: 1400, paidAmount: 420,
-    paymentStatus: 'deposit', confirmed: true,
-  },
-  {
-    id: 'a2', clientId: 'c2', clientName: 'כרמית עוז', phone: '054-7776655',
-    date: tomorrow, time: '14:00', eventType: 'wedding', clientType: 'bride',
-    location: 'מלון דן, רמת גן', companions: 3,
-    totalAmount: 2200, paidAmount: 2200,
-    paymentStatus: 'full', confirmed: true,
-  },
-  {
-    id: 'a3', clientId: 'c3', clientName: 'מור בן-דוד', phone: '050-4445566',
-    date: nextWeek, time: '10:00', eventType: 'event', clientType: 'companion',
-    location: 'חיפה', companions: 2,
-    totalAmount: 600, paidAmount: 180,
-    paymentStatus: 'deposit', confirmed: false,
-  },
-]
-
-const seedPayments: Payment[] = [
-  {
-    id: 'p1', clientId: 'c1', clientName: 'הילה רוזן',
-    amount: 420, type: 'deposit', method: 'bit',
-    date: new Date(now.getTime() - 2 * 86400000).toISOString(),
-    receiptNumber: 'R-1001',
-  },
-  {
-    id: 'p2', clientId: 'c2', clientName: 'כרמית עוז',
-    amount: 2200, type: 'full', method: 'transfer',
-    date: new Date(now.getTime() - 4 * 86400000).toISOString(),
-    receiptNumber: 'R-1002',
-  },
-  {
-    id: 'p3', clientId: 'c3', clientName: 'מור בן-דוד',
-    amount: 180, type: 'deposit', method: 'bit',
-    date: new Date(now.getTime() - 1 * 86400000).toISOString(),
-    receiptNumber: 'R-1003',
-  },
-]
-
-// ── Global Store ───────────────────────────────────────────────
-
-declare global {
-  // eslint-disable-next-line no-var
-  var __store: {
-    leads: Lead[]
-    clients: Client[]
-    appointments: Appointment[]
-    payments: Payment[]
-    receiptCounter: number
-  } | undefined
+// ── LEADS ──────────────────────────────────────────────────────
+export async function getLeads(): Promise<Lead[]> {
+  const { data, error } = await supabase
+    .from('leads')
+    .select('*')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data || []).map(dbToLead)
 }
 
-if (!global.__store) {
-  global.__store = {
-    leads: seedLeads,
-    clients: seedClients,
-    appointments: seedAppointments,
-    payments: seedPayments,
-    receiptCounter: 1004,
-  }
+export async function createLead(data: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>): Promise<Lead> {
+  const row = { ...leadToDb(data), id: generateId(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() }
+  const { data: result, error } = await supabase.from('leads').insert(row).select().single()
+  if (error) throw error
+  return dbToLead(result)
 }
 
-export const store = global.__store
-
-export function createLead(data: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>): Lead {
-  const lead: Lead = {
-    ...data,
-    id: generateId(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-  store.leads.unshift(lead)
-  return lead
+export async function updateLead(id: string, data: Partial<Lead>): Promise<Lead> {
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  if (data.name !== undefined) updates.name = data.name
+  if (data.phone !== undefined) updates.phone = data.phone
+  if (data.status !== undefined) updates.status = data.status
+  if (data.clientType !== undefined) updates.client_type = data.clientType
+  if (data.eventType !== undefined) updates.event_type = data.eventType
+  if (data.eventDate !== undefined) updates.event_date = data.eventDate
+  if (data.location !== undefined) updates.location = data.location
+  if (data.companions !== undefined) updates.companions = data.companions
+  if (data.heardFrom !== undefined) updates.heard_from = data.heardFrom
+  if (data.notes !== undefined) updates.notes = data.notes
+  if (data.noReplyWarning !== undefined) updates.no_reply_warning = data.noReplyWarning
+  const { data: result, error } = await supabase.from('leads').update(updates).eq('id', id).select().single()
+  if (error) throw error
+  return dbToLead(result)
 }
 
-export function updateLead(id: string, data: Partial<Lead>): Lead | null {
-  const idx = store.leads.findIndex(l => l.id === id)
-  if (idx === -1) return null
-  store.leads[idx] = { ...store.leads[idx], ...data, updatedAt: new Date().toISOString() }
-  return store.leads[idx]
+export async function deleteLead(id: string): Promise<void> {
+  const { error } = await supabase.from('leads').delete().eq('id', id)
+  if (error) throw error
 }
 
-export function deleteLead(id: string): boolean {
-  const idx = store.leads.findIndex(l => l.id === id)
-  if (idx === -1) return false
-  store.leads.splice(idx, 1)
-  return true
-}
-
-export function closeLeadAsClient(leadId: string): Client | null {
-  const lead = store.leads.find(l => l.id === leadId)
-  if (!lead) return null
-  updateLead(leadId, { status: 'closed' })
-  const client: Client = {
+export async function closeLeadAsClient(leadId: string): Promise<Client> {
+  const { data: lead, error: leadError } = await supabase.from('leads').select('*').eq('id', leadId).single()
+  if (leadError) throw leadError
+  await supabase.from('leads').update({ status: 'closed', updated_at: new Date().toISOString() }).eq('id', leadId)
+  const clientRow = {
     id: generateId(),
     name: lead.name, phone: lead.phone,
-    clientType: lead.clientType, eventType: lead.eventType,
-    eventDate: lead.eventDate, location: lead.location,
-    companions: lead.companions, heardFrom: lead.heardFrom,
-    notes: lead.notes, totalAmount: 0, paidAmount: 0,
-    paymentStatus: 'none',
-    createdAt: new Date().toISOString(),
-    leadId,
+    client_type: lead.client_type, event_type: lead.event_type,
+    event_date: lead.event_date, location: lead.location,
+    companions: lead.companions, heard_from: lead.heard_from,
+    notes: lead.notes, total_amount: 0, paid_amount: 0,
+    payment_status: 'none', lead_id: leadId,
+    created_at: new Date().toISOString(),
   }
-  store.clients.unshift(client)
-  return client
+  const { data: client, error } = await supabase.from('clients').insert(clientRow).select().single()
+  if (error) throw error
+  return dbToClient(client)
 }
 
-export function createClient(data: Omit<Client, 'id' | 'createdAt'>): Client {
-  const client: Client = { ...data, id: generateId(), createdAt: new Date().toISOString() }
-  store.clients.unshift(client)
-  return client
+// ── CLIENTS ────────────────────────────────────────────────────
+export async function getClients(): Promise<Client[]> {
+  const { data, error } = await supabase.from('clients').select('*').order('created_at', { ascending: false })
+  if (error) throw error
+  return (data || []).map(dbToClient)
 }
 
-export function updateClient(id: string, data: Partial<Client>): Client | null {
-  const idx = store.clients.findIndex(c => c.id === id)
-  if (idx === -1) return null
-  store.clients[idx] = { ...store.clients[idx], ...data }
-  return store.clients[idx]
+export async function updateClient(id: string, data: Partial<Client>): Promise<Client> {
+  const updates: Record<string, unknown> = {}
+  if (data.totalAmount !== undefined) updates.total_amount = data.totalAmount
+  if (data.paidAmount !== undefined) updates.paid_amount = data.paidAmount
+  if (data.paymentStatus !== undefined) updates.payment_status = data.paymentStatus
+  if (data.notes !== undefined) updates.notes = data.notes
+  const { data: result, error } = await supabase.from('clients').update(updates).eq('id', id).select().single()
+  if (error) throw error
+  return dbToClient(result)
 }
 
-export function createAppointment(data: Omit<Appointment, 'id'>): Appointment {
-  const apt: Appointment = { ...data, id: generateId() }
-  store.appointments.push(apt)
-  store.appointments.sort((a, b) => a.date.localeCompare(b.date) || a.time.localeCompare(b.time))
-  return apt
+// ── APPOINTMENTS ───────────────────────────────────────────────
+export async function getAppointments(): Promise<Appointment[]> {
+  const { data, error } = await supabase.from('appointments').select('*').order('date').order('time')
+  if (error) throw error
+  return (data || []).map(dbToAppointment)
 }
 
-export function updateAppointment(id: string, data: Partial<Appointment>): Appointment | null {
-  const idx = store.appointments.findIndex(a => a.id === id)
-  if (idx === -1) return null
-  store.appointments[idx] = { ...store.appointments[idx], ...data }
-  return store.appointments[idx]
+export async function createAppointment(data: Omit<Appointment, 'id'>): Promise<Appointment> {
+  const row = { ...aptToDb(data), id: generateId(), created_at: new Date().toISOString() }
+  const { data: result, error } = await supabase.from('appointments').insert(row).select().single()
+  if (error) throw error
+  return dbToAppointment(result)
 }
 
-export function recordPayment(data: Omit<Payment, 'id' | 'receiptNumber'>): Payment {
-  const receiptNumber = `R-${store.receiptCounter++}`
-  const payment: Payment = { ...data, id: generateId(), receiptNumber }
-  store.payments.unshift(payment)
-  // update client
-  const client = store.clients.find(c => c.id === data.clientId)
+export async function updateAppointment(id: string, data: Partial<Appointment>): Promise<Appointment> {
+  const updates: Record<string, unknown> = {}
+  if (data.confirmed !== undefined) updates.confirmed = data.confirmed
+  if (data.notes !== undefined) updates.notes = data.notes
+  if (data.totalAmount !== undefined) updates.total_amount = data.totalAmount
+  if (data.paidAmount !== undefined) updates.paid_amount = data.paidAmount
+  const { data: result, error } = await supabase.from('appointments').update(updates).eq('id', id).select().single()
+  if (error) throw error
+  return dbToAppointment(result)
+}
+
+// ── PAYMENTS ───────────────────────────────────────────────────
+export async function getPayments(): Promise<Payment[]> {
+  const { data, error } = await supabase.from('payments').select('*').order('date', { ascending: false })
+  if (error) throw error
+  return (data || []).map(dbToPayment)
+}
+
+export async function recordPayment(data: Omit<Payment, 'id' | 'receiptNumber'>): Promise<Payment> {
+  const { count } = await supabase.from('payments').select('*', { count: 'exact', head: true })
+  const receiptNumber = `R-${1001 + (count || 0)}`
+  const row = {
+    id: generateId(),
+    client_id: data.clientId, client_name: data.clientName,
+    amount: data.amount, type: data.type, method: data.method,
+    date: data.date, receipt_number: receiptNumber, notes: data.notes,
+  }
+  const { data: result, error } = await supabase.from('payments').insert(row).select().single()
+  if (error) throw error
+  // update client paid amount
+  const { data: client } = await supabase.from('clients').select('paid_amount, total_amount').eq('id', data.clientId).single()
   if (client) {
-    client.paidAmount += data.amount
-    if (client.paidAmount >= client.totalAmount && client.totalAmount > 0) {
-      client.paymentStatus = 'full'
-    } else if (client.paidAmount > 0) {
-      client.paymentStatus = 'deposit'
-    }
+    const newPaid = (client.paid_amount || 0) + data.amount
+    const status = newPaid >= client.total_amount && client.total_amount > 0 ? 'full' : 'deposit'
+    await supabase.from('clients').update({ paid_amount: newPaid, payment_status: status }).eq('id', data.clientId)
   }
-  return payment
+  return dbToPayment(result)
 }
 
-export function getDashboardStats() {
-  const todayStr = new Date().toISOString().split('T')[0]
-  const todayApts = store.appointments.filter(a => a.date === todayStr)
-  const nextWeekDate = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
-  const upcomingWeek = store.appointments
-    .filter(a => a.date >= todayStr && a.date <= nextWeekDate)
-    .slice(0, 5)
+// ── STATS ──────────────────────────────────────────────────────
+export async function getDashboardStats() {
+  const today = new Date().toISOString().split('T')[0]
+  const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
   const thisMonth = new Date().toISOString().substring(0, 7)
-  const monthRevenue = store.payments
-    .filter(p => p.date.startsWith(thisMonth))
-    .reduce((s, p) => s + p.amount, 0)
+
+  const [leadsRes, aptsRes, weekAptsRes, paymentsRes] = await Promise.all([
+    supabase.from('leads').select('status, no_reply_warning'),
+    supabase.from('appointments').select('*').eq('date', today),
+    supabase.from('appointments').select('*').gte('date', today).lte('date', nextWeek).order('date').order('time').limit(5),
+    supabase.from('payments').select('amount, date').like('date', `${thisMonth}%`),
+  ])
+
+  const leads = leadsRes.data || []
+  const todayApts = aptsRes.data || []
+  const weekApts = weekAptsRes.data || []
+  const monthPayments = paymentsRes.data || []
 
   return {
     todayAppointments: todayApts.length,
-    todayRevenue: todayApts.reduce((s, a) => s + (a.totalAmount - a.paidAmount), 0),
-    newLeads: store.leads.filter(l => l.status === 'new').length,
-    pendingLeads: store.leads.filter(l => l.noReplyWarning).length,
-    monthRevenue,
-    upcomingWeek,
+    todayRevenue: todayApts.reduce((s: number, a: Record<string, number>) => s + (a.total_amount - a.paid_amount), 0),
+    newLeads: leads.filter((l: Record<string, string>) => l.status === 'new').length,
+    pendingLeads: leads.filter((l: Record<string, boolean>) => l.no_reply_warning).length,
+    monthRevenue: monthPayments.reduce((s: number, p: Record<string, number>) => s + p.amount, 0),
+    upcomingWeek: weekApts.map(dbToAppointment),
+  }
+}
+
+// ── MAPPERS ────────────────────────────────────────────────────
+function dbToLead(r: Record<string, unknown>): Lead {
+  return {
+    id: r.id as string, name: r.name as string, phone: r.phone as string,
+    status: r.status as Lead['status'], clientType: r.client_type as Lead['clientType'],
+    eventType: r.event_type as Lead['eventType'], eventDate: r.event_date as string,
+    location: r.location as string, companions: r.companions as number,
+    heardFrom: r.heard_from as string, notes: r.notes as string,
+    source: r.source as string, noReplyWarning: r.no_reply_warning as boolean,
+    createdAt: r.created_at as string, updatedAt: r.updated_at as string,
+  }
+}
+
+function leadToDb(l: Partial<Lead>): Record<string, unknown> {
+  return {
+    name: l.name, phone: l.phone, status: l.status,
+    client_type: l.clientType, event_type: l.eventType,
+    event_date: l.eventDate, location: l.location,
+    companions: l.companions, heard_from: l.heardFrom,
+    notes: l.notes, source: l.source || 'whatsapp',
+    no_reply_warning: l.noReplyWarning || false,
+  }
+}
+
+function dbToClient(r: Record<string, unknown>): Client {
+  return {
+    id: r.id as string, name: r.name as string, phone: r.phone as string,
+    clientType: r.client_type as Client['clientType'], eventType: r.event_type as Client['eventType'],
+    eventDate: r.event_date as string, location: r.location as string,
+    companions: r.companions as number, heardFrom: r.heard_from as string,
+    notes: r.notes as string, totalAmount: r.total_amount as number,
+    paidAmount: r.paid_amount as number, paymentStatus: r.payment_status as Client['paymentStatus'],
+    createdAt: r.created_at as string, leadId: r.lead_id as string,
+  }
+}
+
+function dbToAppointment(r: Record<string, unknown>): Appointment {
+  return {
+    id: r.id as string, clientId: r.client_id as string,
+    clientName: r.client_name as string, phone: r.phone as string,
+    date: r.date as string, time: r.time as string,
+    eventType: r.event_type as Appointment['eventType'],
+    clientType: r.client_type as Appointment['clientType'],
+    location: r.location as string, companions: r.companions as number,
+    notes: r.notes as string, totalAmount: r.total_amount as number,
+    paidAmount: r.paid_amount as number,
+    paymentStatus: r.payment_status as Appointment['paymentStatus'],
+    confirmed: r.confirmed as boolean,
+  }
+}
+
+function aptToDb(a: Partial<Appointment>): Record<string, unknown> {
+  return {
+    client_id: a.clientId, client_name: a.clientName, phone: a.phone,
+    date: a.date, time: a.time, event_type: a.eventType,
+    client_type: a.clientType, location: a.location,
+    companions: a.companions, notes: a.notes,
+    total_amount: a.totalAmount, paid_amount: a.paidAmount,
+    payment_status: a.paymentStatus, confirmed: a.confirmed || false,
+  }
+}
+
+function dbToPayment(r: Record<string, unknown>): Payment {
+  return {
+    id: r.id as string, clientId: r.client_id as string,
+    clientName: r.client_name as string, amount: r.amount as number,
+    type: r.type as Payment['type'], method: r.method as Payment['method'],
+    date: r.date as string, receiptNumber: r.receipt_number as string,
+    notes: r.notes as string,
   }
 }

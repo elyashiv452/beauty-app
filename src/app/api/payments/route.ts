@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { store, recordPayment } from '@/lib/store'
+import { getPayments, recordPayment } from '@/lib/store'
 
 export async function GET() {
-  return NextResponse.json(store.payments)
+  const payments = await getPayments()
+  return NextResponse.json(payments)
 }
 
 export async function POST(req: NextRequest) {
   const body = await req.json()
-  const payment = recordPayment(body)
+  const payment = await recordPayment(body)
   return NextResponse.json(payment, { status: 201 })
 }
