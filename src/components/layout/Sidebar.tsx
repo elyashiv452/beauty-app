@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Users, Calendar, UserCircle,
-  CreditCard, Image, TrendingUp, Sparkles
+  CreditCard, Image, TrendingUp, Sparkles, Clock
 } from 'lucide-react'
 
 const nav = [
@@ -14,13 +14,13 @@ const nav = [
   { href: '/payments', label: 'תשלומים', icon: CreditCard },
   { href: '/portfolio', label: 'תיק עבודות', icon: Image },
   { href: '/revenue', label: 'הכנסות', icon: TrendingUp },
+  { href: '/daily-summary', label: 'סיכום יומי', icon: Clock },
 ]
 
 export default function Sidebar() {
   const pathname = usePathname()
   return (
     <aside className="fixed right-0 top-0 h-full w-64 bg-white border-l border-gray-100 flex flex-col z-50">
-      {/* Logo */}
       <div className="px-6 py-5 border-b border-gray-100">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center">
@@ -32,8 +32,6 @@ export default function Sidebar() {
           </div>
         </div>
       </div>
-
-      {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1">
         {nav.map(({ href, label, icon: Icon }) => {
           const active = pathname === href
@@ -53,8 +51,6 @@ export default function Sidebar() {
           )
         })}
       </nav>
-
-      {/* Footer */}
       <div className="px-4 py-4 border-t border-gray-100">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-medium text-sm">
