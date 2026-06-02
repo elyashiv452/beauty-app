@@ -115,6 +115,16 @@ export default function SettingsPage() {
           />
           <div className="bg-teal-50 border border-teal-200 rounded-lg p-3 text-xs text-teal-700">
             זה המספר שיקבל את הסיכום היומי ב-18:00 כל יום. ניתן לשנות בכל עת.
+        <button
+          onClick={async () => {
+            const res = await fetch('/api/whatsapp/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: form.whatsapp_phone }) })
+            const data = await res.json()
+            alert(data.success ? '✅ הודעת בדיקה נשלחה!' : '❌ שגיאה: ' + data.error)
+          }}
+          className="mx-5 mb-4 px-4 py-2 bg-teal-600 text-white rounded-lg text-sm hover:bg-teal-700"
+        >
+          📱 שלח הודעת בדיקה
+        </button>
           </div>
         </div>
       </Card>
