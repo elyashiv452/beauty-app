@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Calendar, UserCircle,
-  CreditCard, Image, TrendingUp, Sparkles, Clock, Users
+  CreditCard, Image, TrendingUp, Sparkles, Clock, Users, Settings
 } from 'lucide-react'
 
 const nav = [
@@ -16,6 +16,7 @@ const nav = [
   { href: '/revenue', label: 'הכנסות', icon: TrendingUp },
   { href: '/daily-summary', label: 'סיכום יומי', icon: Clock },
   { href: '/team', label: 'צוות', icon: Users },
+  { href: '/settings', label: 'הגדרות', icon: Settings },
 ]
 
 export default function Sidebar() {
